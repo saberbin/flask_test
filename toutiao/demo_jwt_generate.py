@@ -3,11 +3,14 @@ from datetime import datetime, timedelta
 import copy
 
 
-def generate_jwt(payload):
+def generate_jwt(payload, expiey=None, secret_key=None):
     _payload = copy.deepcopy(payload)
-    _payload.update({'exp': datetime.utcnow() + timedelta(hours=3)})
+    if expiey is None:
+        expiey = datetime.utcnow() + timedelta(hours=2)
+    _payload.update({'exp': expiey})
 
-    secret_key = 'qwerasdf'
+    if secret_key is None:
+        secret_key = 'qwerasdf'
     token = jwt.encode(_payload, secret_key, algorithm='HS256')
     return token.decode()
 

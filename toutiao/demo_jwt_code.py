@@ -1,8 +1,10 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.routing import BaseConverter
 from rediscluster import StrictRedisCluster
 import random
+from datetime import datetime, timedelta
+from toutiao.demo_jwt_generate import generate_jwt, verify_jwt
 
 app = Flask(__name__)
 
@@ -16,6 +18,8 @@ class Config(object):
         {'host': '127.0.0.1', 'port': '7001'},
         {'host': '127.0.0.1', 'port': '7002'},
     ]
+
+    JWT_SECRET_KEY = 'hfoiuahsdoifuhoiuhfshfkjh'
 
 
 app.config.from_object(Config)
@@ -79,6 +83,35 @@ def sms_send(mobile):
     code = "%6d" % (random.randint(10000, 999999))
     app.redis_cluster.set(mobile, code)
     return code
+
+
+@app.route('/login')
+def login():
+    mobile = request.args.get('mobile')
+    code = request.args.get('code')
+    print(code)
+    redis_code = app.redis_cluster.get(mobile)
+    print(redis_code)
+    if code is None or code != redis_code.decode():
+        return "Error Code"
+    user = User.query.filter_by(mobile=mobile).first()
+    if user is None:
+        user = User(mobile=mobile, name=mobile+'_name')
+        db.session.add(user)
+        db.session.commit()
+    else:
+        pass
+    payload = {
+        'user_id': user.id
+    }
+    expiey = datetime.utcnow() + timedelta(hours=2)
+    token = generate_jwt(payload, expiey, app.config['JWT_SECRET_KEY'])
+    return token
+
+
+@app.route('index')
+def index():
+    pass
 
 
 if __name__ == '__main__':
