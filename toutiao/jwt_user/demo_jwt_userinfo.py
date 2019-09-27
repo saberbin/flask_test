@@ -4,7 +4,7 @@ from werkzeug.routing import BaseConverter
 from rediscluster import StrictRedisCluster
 import random
 from datetime import datetime, timedelta
-from toutiao.demo_jwt_generate import generate_jwt, verify_jwt
+from toutiao.jwt_user.demo_jwt_generate import generate_jwt, verify_jwt
 
 app = Flask(__name__)
 
@@ -75,7 +75,17 @@ def url_path():
 
 @app.route('/user_info')
 def user_info():
-    return User.query.get(1).name
+    token = request.headers.get('Authorization')
+    if token is None:
+        return '请先登录', 401
+
+    payload = verify_jwt(token, app.config['JWT_SECRET_KEY'])
+    if payload is None:
+        return '请先登录', 401
+
+    user = User.query.get(payload.get('user_id'))
+
+    return user.name
 
 
 @app.route('/sms/<mobile:mobile>')
@@ -93,7 +103,7 @@ def login():
     redis_code = app.redis_cluster.get(mobile)
     print(redis_code)
     if code is None or code != redis_code.decode():
-        return "Error Code"
+        return "Error Code", 401
     user = User.query.filter_by(mobile=mobile).first()
     if user is None:
         user = User(mobile=mobile, name=mobile+'_name')
@@ -109,7 +119,7 @@ def login():
     return token
 
 
-@app.route('index')
+@app.route('/index')
 def index():
     pass
 

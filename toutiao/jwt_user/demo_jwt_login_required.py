@@ -1,10 +1,10 @@
-from flask import Flask, jsonify, request, g, current_app
+from flask import Flask, jsonify, request, g
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.routing import BaseConverter
 from rediscluster import StrictRedisCluster
 import random
 from datetime import datetime, timedelta
-from toutiao.demo_jwt_generate import generate_jwt, verify_jwt
+from toutiao.jwt_user.demo_jwt_generate import generate_jwt, verify_jwt
 
 app = Flask(__name__)
 
