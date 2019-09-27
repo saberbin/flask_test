@@ -15,8 +15,9 @@ def generate_jwt(payload, expiey=None, secret_key=None):
     return token.decode()
 
 
-def verify_jwt(token):
-    secret_key = 'qwerasdf'
+def verify_jwt(token, secret_key=None):
+    if secret_key is None:
+        secret_key = 'qwerasdf'
     payload_data = None
     try:
         payload_data = jwt.decode(token, secret_key, algorithms='HS256')
